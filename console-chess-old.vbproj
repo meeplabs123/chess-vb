@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>console_chess_old</RootNamespace>
+    <TargetFramework>net6.0</TargetFramework>
+  </PropertyGroup>
+
+</Project>
