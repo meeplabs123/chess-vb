@@ -117,11 +117,6 @@ Module Module1
 
         Next n
 
-        Console.Clear()
-        Console.Write(checkJumping(0, 0, 0, 7, myArray))
-        Console.ReadKey()
-        Exit Sub
-
         While to_continue
 
             Console.Clear()
@@ -176,9 +171,10 @@ Module Module1
 
                 End If
 
-                If Not checkMove(myArray(asking_row - 1, asking_column - 1), asking_column - 1, asking_row - 1, going_column - 1, going_row - 1, pawns, myArray, player_turn) Then
-                    Throw New System.Exception("Invalid Movement")
-                End If
+                'EXTENSION WORK
+                'If Not checkMove(myArray(asking_row - 1, asking_column - 1), asking_column - 1, asking_row - 1, going_column - 1, going_row - 1, pawns, myArray, player_turn) Then
+                'Throw New System.Exception("Invalid Movement")
+                'End If
 
                 If owns(asking_row - 1, asking_column - 1) = player_turn Then
 
@@ -242,8 +238,11 @@ Module Module1
 
     Function Draw(myArray, pawns, owns, player_turn) As Boolean
 
-        Console.ForegroundColor = ConsoleColor.White
+        Console.Title = "Chessboard 5000"
+        Console.ForegroundColor = ConsoleColor.Red
 
+        Console.WriteLine("[ NO MOVEMENT CHECKS ]")
+        Console.ForegroundColor = ConsoleColor.White
         Console.WriteLine("[0] No Piece   [1] Pawn   [2] Castle   [3] Knight   [4] Bishop   [5] Queen   [6] King")
 
         Console.WriteLine("")
@@ -346,13 +345,17 @@ Module Module1
 
     End Function
 
+    'EXTENSION: MAKE CHESSBOARD WORK
     Function checkMove(piece, from_x, from_y, to_x, to_y, pawns, myArray, player_turn) As Boolean
         '[0] No Piece   [1] Pawn   [2] Castle   [3] Knight   [4] Bishop   [5] Queen   [6] King
+
+        Console.Write(checkJumping(from_x, from_y, to_x, to_y, myArray))
+        Console.ReadKey()
+
         Select Case piece
             Case 0
                 Return False
             Case 1
-                Console.WriteLine("Breakpoint")
                 If Not to_x = from_x Then
                     Return False
                 End If
@@ -370,7 +373,7 @@ Module Module1
 
                 ElseIf player_turn = 2 Then
 
-
+                    Return True
 
                 End If
                 Return False
@@ -387,26 +390,33 @@ Module Module1
         End Select
         Return False
     End Function
-
     Function checkJumping(from_x, from_y, to_x, to_y, myArray) As Boolean
         'Bresenham's Line Algorithm
-        Dim crosses As Boolean = True
-        Bresenham(from_x, from_y, to_x, to_y, New PlotFunction(AddressOf plot), myArray, crosses)
-        Return crosses
+        Return Bresenham(from_x, from_y, to_x, to_y, New PlotFunction(AddressOf plot), myArray)
     End Function
 
-
-    '============================================================================================================
-    '|    https://jacemorley.wordpress.com/2010/11/18/generic-bresenhams-line-algorithm-in-visual-basic-net/    |
-    '============================================================================================================
-
-    Function plot(x, y, myArray, crosses) As Boolean
-        Console.WriteLine(x.ToString() + " " + y.ToString() + " - " + myArray(x, y).ToString())
+    Function plot(ByVal x As Long, ByVal y As Long, myArray As Array, x1 As Integer, y1 As Integer, x2 As Integer, y2 As Integer) As Boolean
+        Console.Write(x.ToString() + " " + y.ToString())
+        If (x + 1 = x1 And y - 1 = y1) Then
+            'first value
+            Console.WriteLine("  -  FIRST")
+            Return False
+        End If
+        If (x + 3 = x2 And y - 3 = y2) Then
+            'last value
+            Console.WriteLine("  -  LAST")
+            Return False
+        End If
+        Console.WriteLine()
         If Not myArray(x, y) = 0 Then
-            crosses = True
+            Return False
         End If
         Return True
     End Function
+
+    '|==========================================================================================================|
+    '|    https://jacemorley.wordpress.com/2010/11/18/generic-bresenhams-line-algorithm-in-visual-basic-net/    |
+    '|==========================================================================================================|
 
     Sub Swap(ByRef X As Long, ByRef Y As Long)
         Dim t As Long = X
@@ -414,9 +424,11 @@ Module Module1
         Y = t
     End Sub
 
-    Delegate Function PlotFunction(x, y, myArray, crosses) As Boolean
+    ' If the plot function returns true, the bresenham's line algorithm continues.
+    ' if the plot function returns false, the algorithm stops
+    Delegate Function PlotFunction(ByVal x As Long, ByVal y As Long, myArray As Array, x1 As Integer, y1 As Integer, x2 As Integer, y2 As Integer) As Boolean
 
-    Sub Bresenham(ByVal x1 As Long, ByVal y1 As Long, ByVal x2 As Long, ByVal y2 As Long, ByVal plot As PlotFunction, ByVal myArray(,) As Integer, ByVal crosses As Boolean)
+    Function Bresenham(ByVal x1 As Long, ByVal y1 As Long, ByVal x2 As Long, ByVal y2 As Long, ByVal plot As PlotFunction, myArray As Array)
         Dim steep As Boolean = (Math.Abs(y2 - y1) > Math.Abs(x2 - x1))
         If (steep) Then
             Swap(x1, y1)
@@ -442,14 +454,15 @@ Module Module1
 
         For x As Long = x1 To x2
             Dim result As Boolean
-            If (steep) Then result = plot(y, x, myArray, crosses) Else result = plot(x, y, myArray, crosses)
-            If (Not result) Then Exit Sub
+            If (steep) Then result = plot(y, x, myArray, x1, y1, x2, y2) Else result = plot(x, y, myArray, x1, y1, x2, y2)
+            If (result) Then Return True
             err = err - deltaY
             If (err < 0) Then
                 y = y + ystep
                 err = err + deltaX
             End If
         Next
-    End Sub
+        Return False
+    End Function
 
 End Module
